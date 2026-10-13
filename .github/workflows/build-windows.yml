@@ -1,31 +1,41 @@
-```yaml
 name: Build RedXBrowser for Windows
 
 on:
   workflow_dispatch:
-  push:
-    branches: ["main"]
+
+permissions:
+  contents: read
 
 jobs:
   build:
+    name: Compile RedXBrowser
     runs-on: windows-latest
 
     steps:
-      - name: Check out source
+      - name: Download source code
         uses: actions/checkout@v4
 
-      - name: Set up .NET
+      - name: Install .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: '8.0.x'
 
-      - name: Publish Windows executable
-        run: dotnet publish RedXBrowser.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish
+      - name: Restore dependencies
+        run: dotnet restore RedXBrowser.csproj
 
-      - name: Upload browser EXE
+      - name: Build Windows executable
+        run: >-
+          dotnet publish RedXBrowser.csproj
+          --configuration Release
+          --runtime win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          --output ./publish
+
+      - name: Upload EXE
         uses: actions/upload-artifact@v4
         with:
           name: RedXBrowser-Windows-x64
           path: publish/RedXBrowser.exe
           if-no-files-found: error
-```
+          retention-days: 7
